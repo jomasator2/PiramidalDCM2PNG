@@ -1,0 +1,8 @@
+dcm2mids==0.0.post1.dev87+g0177b14
+gdcm==1.1
+numpy==1.24.4
+pillow==10.3.0
+# Editable Git install with no remote (PiramidalDCM2PNG==0.0.post1.dev1+g0fff78f.d20240530)
+-e /mnt/datalake/FISABIO_datalake/prueba1/p0022024/code/python/PiramidalDCM2PNG/src
+pydicom==2.4.4
+SimpleITK==2.3.1

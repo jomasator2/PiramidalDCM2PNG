@@ -20,13 +20,13 @@
         :alt: Twitter
         :target: https://twitter.com/PiramidalDCM2PNG
 
+    .. image:: https://img.shields.io/conda/vn/conda-forge/PiramidalDCM2PNG.svg
+        :alt: Conda-Forge
+        :target: https://anaconda.org/conda-forge/PiramidalDCM2PNG
 .. image:: https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold
     :alt: Project generated with PyScaffold
     :target: https://pyscaffold.org/
-.. image:: https://img.shields.io/conda/vn/conda-forge/PiramidalDCM2PNG.svg
-        :alt: Conda-Forge
-        :target: https://anaconda.org/conda-forge/PiramidalDCM2PNG
-.. image:: https://img.shields.io/coveralls/github/<USER>/PiramidalDCM2PNG/main.svg
+.. image:: https://img.shields.io/coveralls/github/jomasator2/PiramidalDCM2PNG/main.svg
         :alt: Coveralls
         :target: https://coveralls.io/r/jomasator2/PiramidalDCM2PNG
 

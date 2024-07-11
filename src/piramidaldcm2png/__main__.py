@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 
 import PIL
+import pydicom
 
 from piramidaldcm2png import __version__
 from dcm2mids.get_dicomdir import get_dicomdir
@@ -58,7 +59,7 @@ def parse_args(args):
       :obj:`argparse.Namespace`: command line parameters namespace
     """
     parser = argparse.ArgumentParser(description='Convert a level of a pyramidal DICOM from a BIDS/MIDS project into a group of PNG images.')
-    
+    group = parser.add_mutually_exclusive_group(required=True)
     parser.add_argument(
         "-p",
         '--project',
@@ -67,12 +68,25 @@ def parse_args(args):
         help='Path to the BIDS/MIDS project to convert.',
     )
     
-    parser.add_argument(
+    group.add_argument(
         "-l",
         '--level',
         type=int,
-        required=True,
-        help='The level in the pyramidal DICOM to convert.',
+        default=0,
+        required=False,
+        help='''The level in the pyramidal DICOM determined by the resolution order in tag 0x0029, 0x1010. 
+        The first level is the layer with the lowest resolution, the second is 
+        the second, and so on. Negative values can be used to access the last 
+        elements. ''',
+    )
+
+    group.add_argument(
+        "-c",
+        '--chunk',
+        type=int,
+        default=0,
+        required=False,
+        help='The level in the pyramidal DICOM determined by the Chunk variable in the naming convention of BIDS/MIDS',
     )
     
     parser.add_argument(
@@ -107,6 +121,48 @@ def setup_logging(loglevel):
     )
 
 
+def search_by_resolution_order(project, level, path_to_save):
+    paths_dicom = project.resolve().rglob("sub*chunk-1_BF.dcm")
+    
+    for path in paths_dicom:
+        print(path)
+        fs = get_dicomdir(path.parent)
+        dataset = fs.find(InstanceNumber=1)[0].load()
+        levels_list = dataset[0x29,0x1010].value
+        UID, number_of_frames = levels_list[-1*level][0x29, 0x1061][0]
+        fileset = fs.find(SOPInstanceUID=UID.value)[0]
+        dataset = fs.find(SOPInstanceUID=UID.value)[0].load()
+        pixel_data = dataset.pixel_array
+        for i_crop in range(number_of_frames.value):
+            path_to_save_crop = path_to_save.joinpath(
+                path.relative_to(project).parent, 
+                f"{path.stem.split('_run')[0]}_run-{dataset.SeriesNumber}_chunk-{dataset.InstanceNumber}_mod-BF_desc-{i_crop+1:03}_crop.png"
+            )
+            path_to_save_crop.parent.mkdir(parents=True, exist_ok=True)
+            image = pixel_data[i_crop]
+            PIL.Image.fromarray(image, 'YCbCr').convert('RGB').save(path_to_save_crop)
+        with path_to_save_crop.with_suffix(".json").open("w") as json_file:
+            json.dump(dictify(dataset), json_file, indent=4)
+
+def search_by_chunk(project, chunk, path_to_save):
+    paths_dicom = project.resolve().rglob(f"sub*chunk-{chunk}_BF.dcm")
+    
+    
+    for path in paths_dicom:
+        print(path)
+        dicom = pydicom.dcmread(path)
+        dicom_image = dicom.pixel_array
+        for i_crop in range(dicom.NumberOfFrames):
+            path_to_save_crop = path_to_save.joinpath(
+                path.relative_to(project).parent, 
+                f"{path.stem.split('_run')[0]}_run-{dicom.SeriesNumber}_chunk-{dicom.InstanceNumber}_mod-BF_desc-{i_crop+1:03}_crop.png"
+            )
+            path_to_save_crop.parent.mkdir(parents=True, exist_ok=True)
+            image = dicom_image[i_crop]
+            PIL.Image.fromarray(image, 'YCbCr').convert('RGB').save(path_to_save_crop)
+        with path_to_save_crop.with_suffix(".json").open("w") as json_file:
+            json.dump(dictify(dicom), json_file, indent=4)    
+    
 def main(args):
     """Wrapper allowing :func:`fib` to be called with string arguments in a CLI fashion
 
@@ -120,29 +176,17 @@ def main(args):
     args = parse_args(args)
     setup_logging(args.loglevel)
     _logger.debug("Starting script with arguments: %s", args)
+    if args.project.is_dir():
+        _logger.info("The project is a directory")
+        path_to_save = args.project.resolve() / "derivatives" / "png_slides"
+        if args.level != 0:
+            search_by_resolution_order(args.project, args.level, path_to_save)
+        if args.chunk != 0:
+            search_by_chunk(args.project, args.chunk, path_to_save)
+    else:
+        _logger.error("The project is not a directory")
+
     
-    paths_dicom = args.project.resolve().rglob("sub*chunk-1_BF.dcm")
-    paths_to_save = args.project.resolve() / "derivatives" / "png_slides"
-    
-    for path in paths_dicom:
-        print(path)
-        fs = get_dicomdir(path.parent)
-        dataset = fs.find(InstanceNumber=1)[0].load()
-        levels_list = dataset[0x29,0x1010].value
-        UID, number_of_frames = levels_list[-1*args.level][0x29, 0x1061][0]
-        fileset = fs.find(SOPInstanceUID=UID.value)[0]
-        dataset = fs.find(SOPInstanceUID=UID.value)[0].load()
-        pixel_data = dataset.pixel_array
-        for i_crop in range(number_of_frames.value):
-            path_to_save_crop = paths_to_save.joinpath(
-                path.relative_to(args.project).parent, 
-                f"{path.stem.split('_run')[0]}_run-{dataset.SeriesNumber}_chunk-{dataset.InstanceNumber}_mod-BF_desc-{i_crop+1:03}_crop.png"
-            )
-            path_to_save_crop.parent.mkdir(parents=True, exist_ok=True)
-            image = pixel_data[i_crop]
-            PIL.Image.fromarray(image, 'YCbCr').convert('RGB').save(path_to_save_crop)
-        with path_to_save_crop.with_suffix(".json").open("w") as json_file:
-            json.dump(dictify(dataset), json_file, indent=4)
         
         
     _logger.info("Script ends here")

@@ -86,7 +86,7 @@ The CLI allows for easy conversion of DICOM files to PNG. The basic usage is as 
 
 .. code-block:: sh
 
-    piramidaldicom2png -p <path_to_project> -l <level> [--verbose] [--very-verbose]
+    piramidaldicom2png -p <path_to_project> -c <chunk> -l <level> [--verbose] [--very-verbose]
 
 - `-p`, `--project`: Path to the BIDS/MIDS project to convert.
 - `-l`, `--level`: The level in the pyramidal DICOM to convert.

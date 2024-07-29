@@ -89,7 +89,8 @@ The CLI allows for easy conversion of DICOM files to PNG. The basic usage is as 
     piramidaldicom2png -p <path_to_project> -c <chunk> -l <level> [--verbose] [--very-verbose]
 
 - `-p`, `--project`: Path to the BIDS/MIDS project to convert.
-- `-l`, `--level`: The level in the pyramidal DICOM to convert.
+- `-c`, `--chunk`: The chunk of the pyramidal DICOM to convert by chunk naming.
+- `-l`, `--level`: The level in the pyramidal DICOM to convert by resolution order(lowest to highest resolution).
 - `-v`, `--verbose`: Set loglevel to INFO.
 - `-vv`, `--very-verbose`: Set loglevel to DEBUG.
 

@@ -41,7 +41,6 @@ Overview
 
 The `piramidaldicom2png` package is designed to convert one level of a pyramidal DICOM (Digital Imaging and Communications in Medicine) file into a group of PNG (Portable Network Graphics) images. This conversion is particularly useful in medical imaging where DICOM is the standard format. However, for certain applications like machine learning models or web visualization, PNG format might be more suitable due to its wide acceptance and smaller size.
 
-The package provides a command-line interface (CLI) for easy conversion of these files. The CLI is installed as `fibonacci` in the current environment when the package is installed.
 
 Installation
 ------------
